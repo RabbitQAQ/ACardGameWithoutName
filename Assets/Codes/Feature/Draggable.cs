@@ -5,38 +5,44 @@ using UnityEngine.EventSystems;
 
 public class Draggable : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
+    private bool _isCast = false;
 
-	private bool isCast = false;
-	
-	public void OnBeginDrag(PointerEventData eventData)
-	{
-		//Debug.Log("On Begin Drag");
-		this.transform.SetParent(FindObjectOfType<Canvas>().transform);
-		GetComponent<CanvasGroup>().blocksRaycasts = false;
-	}
-	
-	public void OnDrag(PointerEventData eventData)
-	{
-		//Debug.Log("On Drag");
-		this.transform.position = eventData.position;
-		List<RaycastResult> raycastResults = new List<RaycastResult>();
-		EventSystem.current.RaycastAll(eventData, raycastResults);
-		if (raycastResults.Count == 0)
-			isCast = true;
-		else
-			isCast = false;
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        // Remove current card from hand
+        this.transform.SetParent(FindObjectOfType<Canvas>().transform);
+        // Disable blocksRaycasts. Or cards cannot do raycast related operations
+        GetComponent<CanvasGroup>().blocksRaycasts = false;
+    }
 
-	}
-	
-	public void OnEndDrag(PointerEventData eventData)
-	{
-		//Debug.Log("On end Drag");
-		GetComponent<CanvasGroup>().blocksRaycasts = true;
-		if (isCast)
-		{
-			PlayerController playerController = GameObject.Find("Player").GetComponent<PlayerController>();
-			playerController.GetComponent<CardCaster>().cast(Camera.main.ScreenToWorldPoint(new Vector3(eventData.position.x, eventData.position.y)), "FireBall");
-			Destroy(this.transform.gameObject);
-		}
-	}
+    public void OnDrag(PointerEventData eventData)
+    {
+        this.transform.position = eventData.position;
+        // Judge whether the card has been moved out of hand area
+        List<RaycastResult> raycastResults = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, raycastResults);
+        // No UI element under current position then do casting
+        if (raycastResults.Count == 0)
+            _isCast = true;
+        else
+            _isCast = false;
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        // Enable blocksRaycast. Or cards cannot be interacted.
+        GetComponent<CanvasGroup>().blocksRaycasts = true;
+        // Card cast
+        if (_isCast)
+        {
+            // Call player's cast(). All card casting logic should process in cast()
+            // Card is UI element, it's position is originally represented in screen coordinate and need to convert to world coordinate
+            PlayerController playerController = GameObject.Find("Player").GetComponent<PlayerController>();
+            playerController.GetComponent<CardCaster>()
+                .cast(Camera.main.ScreenToWorldPoint(new Vector3(eventData.position.x, eventData.position.y)),
+                    "FireBall");
+
+            Destroy(this.transform.gameObject);
+        }
+    }
 }

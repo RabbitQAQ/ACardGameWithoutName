@@ -9,6 +9,7 @@ public class Fireball : MonoBehaviour
 
 	private void Start()
 	{
+		// Init special effect, make it move with object
 		particleEffect = Instantiate(particleEffect, this.transform.position, this.transform.rotation);
 		particleEffect.transform.SetParent(this.transform);
 	}
