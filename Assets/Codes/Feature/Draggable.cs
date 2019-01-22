@@ -18,10 +18,12 @@ public class Draggable : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDra
     public void OnDrag(PointerEventData eventData)
     {
         this.transform.position = eventData.position;
+        // Card dealer shouldn't count when dragging a card
+        CardDealer.shouldCount = false;
         // Judge whether the card has been moved out of hand area
         List<RaycastResult> raycastResults = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, raycastResults);
-        // No UI element under current position then do casting
+        // No UI element under current position, do casting
         if (raycastResults.Count == 0)
             _isCast = true;
         else
@@ -30,6 +32,8 @@ public class Draggable : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDra
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        // Card dealer can count now
+        CardDealer.shouldCount = true;
         // Enable blocksRaycast. Or cards cannot be interacted.
         GetComponent<CanvasGroup>().blocksRaycasts = true;
         // Card cast
@@ -40,8 +44,11 @@ public class Draggable : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDra
             PlayerController playerController = GameObject.Find("Player").GetComponent<PlayerController>();
             playerController.GetComponent<CardCaster>()
                 .cast(Camera.main.ScreenToWorldPoint(new Vector3(eventData.position.x, eventData.position.y)),
-                    "FireBall");
+                    GetComponent<CardProperty>().cardName);
 
+            // Card number in hand should decrease
+            CardDealer.currCardNum--;
+            
             Destroy(this.transform.gameObject);
         }
     }
