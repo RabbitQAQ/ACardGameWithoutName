@@ -24,7 +24,6 @@ public class EnemySpawnerController : MonoBehaviour {
 
 	private void FixedUpdate()
 	{
-		Debug.Log("fuck");
 		if (!isStop)
 			count++;
 		else
